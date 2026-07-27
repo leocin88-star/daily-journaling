@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="theme-color" content="#faf9f7"/>
+<title>晨写</title>
+<style>
+:root{
+  --bg:#faf9f7;--surface:#fff;--surface-2:#f3f1ed;--border:#e8e4de;--border-strong:#d4cfc7;
+  --text:#1a1916;--text-2:#6b6760;--text-muted:#a8a39b;
+  --accent:#4a6fa5;--accent-bg:#eef2f8;--accent-text:#2d4a73;
+  --success:#3a7d5c;--success-bg:#edf6f1;
+  --amber:#b07830;--amber-bg:#fef6ec;
+  --purple:#7a5aa5;--purple-bg:#f6f0f8;
+  --coral:#a0503a;--coral-bg:#fdf0ec;
+  --radius:8px;--radius-lg:12px;
+  --font-body:'Georgia','Noto Serif SC',serif;
+  --font-ui:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#181715;--surface:#222120;--surface-2:#2a2927;--border:#333230;--border-strong:#444240;
+    --text:#f0ede8;--text-2:#9b9690;--text-muted:#5e5c58;
+    --accent:#6b8ec4;--accent-bg:#1e2a3a;--accent-text:#9bb8e0;
+    --success:#4fa07a;--success-bg:#182a22;
+    --amber-bg:#2a2010;--purple-bg:#1e1828;--coral-bg:#2a1810;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:50px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.app-logo{font-size:16px;font-weight:600;color:var(--text);font-family:var(--font-body);letter-spacing:-0.02em;white-space:nowrap;}
+.topbar-date{font-size:12px;color:var(--text-muted);white-space:nowrap;}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--radius);font-size:12px;font-family:var(--font-ui);border:1px solid var(--border-strong);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
+.btn:hover{background:var(--surface-2);color:var(--text);}
+.btn:active{transform:scale(.97);}
+.btn-accent{background:var(--accent);color:#fff;border-color:transparent;}
+.btn-accent:hover{opacity:.88;background:var(--accent);color:#fff;}
+.btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;font-size:16px;transition:background .12s;-webkit-tap-highlight-color:transparent;}
+.btn-icon:hover{background:var(--surface-2);}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:210px;min-width:210px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-nav{padding:8px 6px 4px;}
+.nav-label{font-size:10px;color:var(--text-muted);padding:8px 8px 3px;letter-spacing:.07em;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:var(--radius);font-size:13px;color:var(--text-2);cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent;margin-bottom:1px;}
+.nav-item:hover{background:var(--surface-2);color:var(--text);}
+.nav-item.active{background:var(--accent-bg);color:var(--accent-text);font-weight:500;}
+.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.entry-list{flex:1;overflow-y:auto;padding:2px 6px 6px;}
+.entry-item{padding:7px 8px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px;transition:background .1s;-webkit-tap-highlight-color:transparent;}
+.entry-item:hover{background:var(--surface-2);}
+.entry-item.active{background:var(--accent-bg);}
+.entry-item-date{font-size:12px;font-weight:500;color:var(--text);margin-bottom:1px;}
+.entry-item.active .entry-item-date{color:var(--accent-text);}
+.entry-item-preview{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-footer{padding:10px 8px;border-top:1px solid var(--border);}
+.streak-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);}
+.streak-num{font-size:18px;font-weight:600;color:var(--accent);font-family:var(--font-body);line-height:1;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.view{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.view.active{display:flex;}
+
+/* EDITOR HEADER */
+.editor-header{padding:12px 20px 10px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.editor-title{font-size:18px;font-weight:600;font-family:var(--font-body);color:var(--text);letter-spacing:-.02em;margin-bottom:6px;}
+.mood-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;row-gap:5px;}
+.mood-label{font-size:12px;color:var(--text-muted);}
+.mood-slider{-webkit-appearance:none;appearance:none;width:90px;height:3px;border-radius:2px;background:var(--border-strong);outline:none;cursor:pointer;}
+.mood-slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.mood-value{font-size:12px;font-weight:500;color:var(--accent);min-width:14px;}
+.timer-display{font-size:12px;color:var(--text-muted);margin-left:auto;display:flex;align-items:center;gap:5px;}
+.timer-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* SECTIONS */
+.sections-wrapper{flex:1;overflow-y:auto;}
+.section-block{border-bottom:1px solid var(--border);}
+.section-toggle{display:flex;align-items:center;gap:9px;padding:12px 20px;cursor:pointer;background:var(--surface);user-select:none;-webkit-tap-highlight-color:transparent;}
+.section-toggle:hover{background:var(--surface-2);}
+.section-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.section-meta{flex:1;min-width:0;}
+.section-name{font-size:13px;font-weight:500;color:var(--text);}
+.section-hint{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.section-wc{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.section-chevron{font-size:11px;color:var(--text-muted);transition:transform .15s;}
+.section-block.collapsed .section-chevron{transform:rotate(-90deg);}
+.section-body{padding:0 20px 18px;background:var(--bg);}
+.section-block.collapsed .section-body{display:none;}
+.section-textarea{width:100%;border:none;background:transparent;color:var(--text);font-size:14px;line-height:1.9;resize:none;outline:none;padding:12px 0 0;min-height:90px;font-family:var(--font-body);}
+.section-textarea::placeholder{color:var(--text-muted);font-style:italic;}
+.section-textarea.compact{font-size:13px;min-height:65px;font-family:var(--font-ui);line-height:1.75;}
+.section-textarea.sandtray{font-size:14px;min-height:160px;font-family:var(--font-body);line-height:2;}
+
+/* SANDTRAY STEPS */
+.sandtray-steps{padding:10px 0 0;}
+.step-block{margin-bottom:14px;}
+.step-label{font-size:11px;font-weight:500;color:var(--text-2);background:var(--surface-2);display:inline-block;padding:2px 8px;border-radius:10px;margin-bottom:4px;}
+.step-hint{font-size:11px;color:var(--text-muted);margin-bottom:5px;line-height:1.6;padding-left:2px;}
+
+/* SELF-EXPLORE QUESTION */
+.explore-q{background:var(--accent-bg);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:10px 14px;margin:10px 0 4px;font-size:13px;color:var(--accent-text);font-style:italic;line-height:1.6;}
+.explore-nav{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.explore-qnum{font-size:11px;color:var(--text-muted);}
+
+/* STATS BAR */
+.stats-bar{display:flex;align-items:center;gap:14px;padding:7px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;row-gap:3px;}
+.stat-chip{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);}
+.stat-chip strong{color:var(--text-2);font-weight:500;}
+.save-status{margin-left:auto;font-size:12px;color:var(--success);}
+
+/* CALENDAR VIEW */
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
+.cal-month{font-size:15px;font-weight:600;font-family:var(--font-body);}
+.cal-grid{padding:12px 16px;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-wd{font-size:11px;color:var(--text-muted);text-align:center;padding:2px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:var(--radius);font-size:13px;color:var(--text-2);cursor:pointer;position:relative;transition:background .1s;}
+.cal-day:hover{background:var(--surface-2);}
+.cal-day.today{font-weight:600;color:var(--accent);}
+.cal-day.has-entry{background:var(--accent-bg);}
+.cal-day.has-entry::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent);}
+.cal-day.today.has-entry{background:var(--accent);color:#fff;}
+.cal-day.today.has-entry::after{background:#fff;}
+.cal-day.empty{cursor:default;}
+
+/* ARCHIVE, STATS views */
+.view-header{padding:14px 20px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.view-title{font-size:16px;font-weight:600;font-family:var(--font-body);}
+.view-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.scrollable{flex:1;overflow-y:auto;padding:16px 20px;}
+
+.archive-month{margin-bottom:20px;}
+.archive-month-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+.archive-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:7px;cursor:pointer;transition:border-color .12s;}
+.archive-card:hover{border-color:var(--accent);}
+.archive-card-date{font-size:13px;font-weight:500;margin-bottom:3px;}
+.archive-card-preview{font-size:13px;color:var(--text-2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.archive-card-meta{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.tag{font-size:11px;color:var(--text-muted);background:var(--surface-2);padding:2px 7px;border-radius:10px;}
+.tag.type-book{background:var(--amber-bg);color:var(--amber);}
+.tag.type-film{background:var(--purple-bg);color:var(--purple);}
+.tag.type-explore{background:var(--coral-bg);color:var(--coral);}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;}
+.stat-card-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.stat-card-value{font-size:26px;font-weight:600;font-family:var(--font-body);color:var(--text);line-height:1;}
+.stat-card-sub{font-size:11px;color:var(--text-muted);margin-top:3px;}
+.heatmap-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px;}
+.heatmap-title{font-size:13px;font-weight:500;margin-bottom:10px;}
+.heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.hm-cell{aspect-ratio:1;border-radius:3px;background:var(--surface-2);}
+.hm-cell.done{background:var(--accent);opacity:.8;}
+.hm-cell.today{background:var(--accent);box-shadow:0 0 0 2px var(--accent-bg),0 0 0 3px var(--accent);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:22px;width:100%;max-width:410px;box-shadow:0 8px 32px rgba(0,0,0,.16);}
+.modal-title{font-size:15px;font-weight:600;font-family:var(--font-body);margin-bottom:5px;}
+.modal-sub{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:14px;}
+.export-options{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.export-opt{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:border-color .1s,background .1s;-webkit-tap-highlight-color:transparent;}
+.export-opt:hover,.export-opt.selected{border-color:var(--accent);background:var(--accent-bg);}
+.export-opt-icon{font-size:18px;}
+.export-opt-text h4{font-size:13px;font-weight:500;margin-bottom:1px;}
+.export-opt-text p{font-size:11px;color:var(--text-muted);}
+.export-preview{background:var(--surface-2);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text-2);font-family:var(--font-ui);line-height:1.6;max-height:130px;overflow-y:auto;margin-bottom:14px;white-space:pre-wrap;display:none;}
+.modal-footer{display:flex;gap:7px;justify-content:flex-end;}
+
+/* MOBILE */
+.sidebar-toggle{display:none;}
+@media(max-width:640px){
+  .sidebar{position:fixed;left:-215px;top:0;bottom:0;z-index:50;transition:left .22s ease;box-shadow:none;}
+  .sidebar.open{left:0;box-shadow:4px 0 20px rgba(0,0,0,.15);}
+  .sidebar-toggle{display:flex;}
+  .topbar-date{display:none;}
+  .editor-header,.section-toggle,.stats-bar{padding-left:14px;padding-right:14px;}
+  .section-body{padding-left:14px;padding-right:14px;}
+  .scrollable,.cal-grid{padding:12px 14px;}
+}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-icon sidebar-toggle" onclick="toggleSidebar()" aria-label="菜单">☰</button>
+    <span class="app-logo">晨写</span>
+    <span class="topbar-date" id="topbar-date"></span>
+  </div>
+  <div class="topbar-right">
+    <div id="drive-status" class="btn" onclick="driveAction()" style="cursor:pointer;">☁️ 连接 Drive</div>
+    <button class="btn" onclick="openExport()">📤 导出</button>
+    <button class="btn btn-accent" onclick="saveEntry()">保存</button>
+  </div>
+</div>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-nav">
+    <div class="nav-label">今日</div>
+    <div class="nav-item active" onclick="switchView('morning')" id="nav-morning"><span class="nav-dot" style="background:#f59e42"></span>晨间书写</div>
+    <div class="nav-item" onclick="switchView('night')" id="nav-night"><span class="nav-dot" style="background:#7a5aa5"></span>夜晚总结</div>
+    <div class="nav-label">笔记</div>
+    <div class="nav-item" onclick="switchView('book')" id="nav-book"><span class="nav-dot" style="background:#b07830"></span>读书笔记</div>
+    <div class="nav-item" onclick="switchView('film')" id="nav-film"><span class="nav-dot" style="background:#4a6fa5"></span>观影感受</div>
+    <div class="nav-label">查看</div>
+    <div class="nav-item" onclick="switchView('calendar')" id="nav-calendar"><span class="nav-dot" style="background:#3a7d5c"></span>日历</div>
+    <div class="nav-item" onclick="switchView('archive')" id="nav-archive"><span class="nav-dot" style="background:#888"></span>历史记录</div>
+    <div class="nav-item" onclick="switchView('stats')" id="nav-stats"><span class="nav-dot" style="background:#888"></span>习惯追踪</div>
+  </div>
+  <div class="nav-label" style="padding:8px 8px 3px;">最近条目</div>
+  <div class="entry-list" id="entry-list"></div>
+  <div class="sidebar-footer">
+    <div class="streak-row">
+      <div class="streak-num" id="streak-num">0</div>
+      <div>
+        <div style="font-size:12px;color:var(--text-2);">天连续书写</div>
+        <div style="font-size:11px;color:var(--text-muted);" id="total-label">共 0 篇</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ① 晨间书写 -->
+<div class="view active" id="view-morning">
+  <div class="editor-header">
+    <div class="editor-title" id="editor-title-morning">今日晨间书写</div>
+    <div class="mood-row">
+      <span class="mood-label">状态</span>
+      <input type="range" min="1" max="10" value="7" class="mood-slider" id="mood-morning" oninput="document.getElementById('mval-morning').textContent=this.value"/>
+      <span class="mood-value" id="mval-morning">7</span>
+      <div class="timer-display"><div class="timer-dot"></div><span id="timer-display">00:00</span></div>
+    </div>
+  </div>
+  <div class="sections-wrapper">
+
+    <!-- 思维沙盘 -->
+    <div class="section-block" id="block-sandtray">
+      <div class="section-toggle" onclick="toggleSection('sandtray')">
+        <div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">🧩</div>
+        <div class="section-meta"><div class="section-name">思维沙盘</div><div class="section-hint">从一件小事解剖自我</div></div>
+        <span class="section-wc" id="wc-sandtray">0 字</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="sandtray-steps">
+          <div class="step-block">
+            <div class="step-label">素材</div>
+            <div class="step-hint">昨天24小时里，让你产生情绪波动的任何一件小事</div>
+            <textarea class="section-textarea compact" id="ta-material" placeholder="描述那件事……" oninput="updateWc('sandtray')"></textarea>
+          </div>
+          <div class="step-block">
+            <div class="step-label">第一步：还原</div>
+            <div class="step-hint">不分析，不评判，剥离情绪，只陈述事实</div>
+            <textarea class="section-textarea compact" id="ta-step1" placeholder="事实是……" oninput="updateWc('sandtray')"></textarea>
+          </div>
+          <div class="step-block">
+            <div class="step-label">第二步：解剖</div>
+            <div class="step-hint">为什么有当时的情绪？为什么选择了那个反应？我怎么看待对方的角度？</div>
+            <textarea class="section-textarea sandtray" id="ta-step2" placeholder="深挖原因……" oninput="updateWc('sandtray')"></textarea>
+          </div>
+          <div class="step-block">
+            <div class="step-label">第三步：归纳</div>
+            <div class="step-hint">提炼出一个普适性的「道理」或「心法」——例：情绪定律、归因谬误、目标切换……</div>
+            <textarea class="section-textarea compact" id="ta-step3" placeholder="我的心法是……" oninput="updateWc('sandtray')"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自我探索 -->
+    <div class="section-block" id="block-explore">
+      <div class="section-toggle" onclick="toggleSection('explore')">
+        <div class="section-icon" style="background:var(--coral-bg);color:var(--coral);">🔍</div>
+        <div class="section-meta"><div class="section-name">自我探索</div><div class="section-hint">每天一个问题，向内深挖</div></div>
+        <span class="section-wc" id="wc-explore">0 字</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="explore-nav">
+          <span class="explore-qnum" id="explore-qnum">问题 1 / 60</span>
+          <button class="btn" onclick="prevQ()" style="padding:3px 8px;font-size:11px;">‹ 上一题</button>
+          <button class="btn" onclick="nextQ()" style="padding:3px 8px;font-size:11px;">下一题 ›</button>
+        </div>
+        <div class="explore-q" id="explore-q-text"></div>
+        <textarea class="section-textarea compact" id="ta-explore" placeholder="我的回答……" oninput="updateWc('explore')"></textarea>
+      </div>
+    </div>
+
+    <!-- 观察与细节 -->
+    <div class="section-block" id="block-observe">
+      <div class="section-toggle" onclick="toggleSection('observe')">
+        <div class="section-icon" style="background:var(--success-bg);color:var(--success);">👁</div>
+        <div class="section-meta"><div class="section-name">观察与细节</div><div class="section-hint">一个画面、声音、气味、对话片段</div></div>
+        <span class="section-wc" id="wc-observe">0 字</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <textarea class="section-textarea compact" id="ta-observe" placeholder="来自今天、昨天的记忆，或梦境碎片……" oninput="updateWc('observe')"></textarea>
+      </div>
+    </div>
+
+    <!-- 悬置问题 -->
+    <div class="section-block" id="block-question">
+      <div class="section-toggle" onclick="toggleSection('question')">
+        <div class="section-icon" style="background:var(--purple-bg);color:var(--purple);">❓</div>
+        <div class="section-meta"><div class="section-name">悬置问题</div><div class="section-hint">今天还没想清楚的事</div></div>
+        <span class="section-wc" id="wc-question">0 字</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <textarea class="section-textarea compact" id="ta-question" placeholder="一个让你带着走的问题，不需要答案……" oninput="updateWc('question')"></textarea>
+      </div>
+    </div>
+
+    <!-- 创作连接 -->
+    <div class="section-block" id="block-creative">
+      <div class="section-toggle" onclick="toggleSection('creative')">
+        <div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">💡</div>
+        <div class="section-meta"><div class="section-name">创作连接</div><div class="section-hint">与正在进行的项目的连接（可选）</div></div>
+        <span class="section-wc" id="wc-creative">0 字</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <textarea class="section-textarea compact" id="ta-creative" placeholder="今天的书写让你想到哪个故事、人物或情节？" oninput="updateWc('creative')"></textarea>
+      </div>
+    </div>
+
+  </div>
+  <div class="stats-bar">
+    <div class="stat-chip">⏱ <strong id="stat-time">00:00</strong></div>
+    <div class="stat-chip">📝 <strong id="stat-wc">0</strong> 字</div>
+    <div class="stat-chip">🔥 连续 <strong id="stat-streak">0</strong> 天</div>
+    <div class="save-status" id="save-status"></div>
+  </div>
+</div>
+
+<!-- ② 夜晚总结 -->
+<div class="view" id="view-night">
+  <div class="editor-header">
+    <div class="editor-title" id="editor-title-night">夜晚总结</div>
+    <div class="mood-row">
+      <span class="mood-label">今日评分</span>
+      <input type="range" min="1" max="10" value="7" class="mood-slider" id="mood-night" oninput="document.getElementById('mval-night').textContent=this.value"/>
+      <span class="mood-value" id="mval-night">7</span>
+    </div>
+  </div>
+  <div class="sections-wrapper">
+    <div class="section-block" id="block-n-key"><div class="section-toggle" onclick="toggleSection('n-key')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">⭐</div><div class="section-meta"><div class="section-name">今日要事</div><div class="section-hint">今天最重要的事情发生了什么</div></div><span class="section-wc" id="wc-n-key">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-key" placeholder="今天做了/发生了……" oninput="updateWc('n-key')"></textarea></div></div>
+    <div class="section-block" id="block-n-book"><div class="section-toggle" onclick="toggleSection('n-book')"><div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">📖</div><div class="section-meta"><div class="section-name">今日书帐</div><div class="section-hint">知识点、金句、有趣的内容</div></div><span class="section-wc" id="wc-n-book">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-book" placeholder="今天看到让你印象深刻的……" oninput="updateWc('n-book')"></textarea></div></div>
+    <div class="section-block" id="block-n-life"><div class="section-toggle" onclick="toggleSection('n-life')"><div class="section-icon" style="background:var(--success-bg);color:var(--success);">🍱</div><div class="section-meta"><div class="section-name">生活记录</div><div class="section-hint">饮食、影音、见闻</div></div><span class="section-wc" id="wc-n-life">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-life" placeholder="今天吃了/看了/遇见了……" oninput="updateWc('n-life')"></textarea></div></div>
+    <div class="section-block" id="block-n-idea"><div class="section-toggle" onclick="toggleSection('n-idea')"><div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">⚡</div><div class="section-meta"><div class="section-name">今日灵感</div><div class="section-hint">闪现的脑洞、段子、观察</div></div><span class="section-wc" id="wc-n-idea">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-idea" placeholder="突然想到……" oninput="updateWc('n-idea')"></textarea></div></div>
+    <div class="section-block" id="block-n-learn"><div class="section-toggle" onclick="toggleSection('n-learn')"><div class="section-icon" style="background:var(--purple-bg);color:var(--purple);">🧠</div><div class="section-meta"><div class="section-name">今日新知</div><div class="section-hint">学到的冷知识或新内容</div></div><span class="section-wc" id="wc-n-learn">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-learn" placeholder="今天学到了……" oninput="updateWc('n-learn')"></textarea></div></div>
+    <div class="section-block" id="block-n-reflect"><div class="section-toggle" onclick="toggleSection('n-reflect')"><div class="section-icon" style="background:var(--coral-bg);color:var(--coral);">🪞</div><div class="section-meta"><div class="section-name">今日反思</div><div class="section-hint">成就感、挫败感，改进建议</div></div><span class="section-wc" id="wc-n-reflect">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-reflect" placeholder="今天做得好的是……做得不好的是……下次可以……" oninput="updateWc('n-reflect')"></textarea></div></div>
+    <div class="section-block" id="block-n-sleep"><div class="section-toggle" onclick="toggleSection('n-sleep')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">🌙</div><div class="section-meta"><div class="section-name">睡眠评分</div><div class="section-hint">昨晚的睡眠质量与梦境</div></div><span class="section-wc" id="wc-n-sleep">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-n-sleep" placeholder="睡眠质量：/10，梦到了……" oninput="updateWc('n-sleep')"></textarea></div></div>
+    <div class="section-block" id="block-gratitude"><div class="section-toggle" onclick="toggleSection('gratitude')"><div class="section-icon" style="background:#fdf0f4;color:#e85a7a;">🌸</div><div class="section-meta"><div class="section-name">每日感谢</div><div class="section-hint">今天想感谢的人、事、或自己</div></div><span class="section-wc" id="wc-gratitude">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-gratitude" placeholder="今天想感谢……" oninput="updateWc('gratitude')"></textarea></div></div>
+  </div>
+  <div class="stats-bar"><div class="save-status" id="save-status-night"></div></div>
+</div>
+
+<!-- ④ 读书笔记 -->
+<div class="view" id="view-book">
+  <div class="editor-header">
+    <div class="editor-title">读书笔记</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">书名：<input id="book-title" style="border:none;background:transparent;font-size:12px;color:var(--text);outline:none;width:160px;" placeholder="输入书名……"/></div>
+  </div>
+  <div class="sections-wrapper">
+    <div class="section-block" id="block-b-summary"><div class="section-toggle" onclick="toggleSection('b-summary')"><div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">📝</div><div class="section-meta"><div class="section-name">核心摘要</div><div class="section-hint">这本书在说什么？核心论点是什么？</div></div><span class="section-wc" id="wc-b-summary">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-b-summary" placeholder="这本书的核心是……" oninput="updateWc('b-summary')"></textarea></div></div>
+    <div class="section-block" id="block-b-quote"><div class="section-toggle" onclick="toggleSection('b-quote')"><div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">💬</div><div class="section-meta"><div class="section-name">金句摘录</div><div class="section-hint">让你停下来的那些句子</div></div><span class="section-wc" id="wc-b-quote">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-b-quote" placeholder=""……"（p. ）" oninput="updateWc('b-quote')"></textarea></div></div>
+    <div class="section-block" id="block-b-connect"><div class="section-toggle" onclick="toggleSection('b-connect')"><div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">🔗</div><div class="section-meta"><div class="section-name">与我的连接</div><div class="section-hint">这本书触动了什么？能用在哪里？</div></div><span class="section-wc" id="wc-b-connect">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-b-connect" placeholder="读到这里，我想到了……" oninput="updateWc('b-connect')"></textarea></div></div>
+    <div class="section-block" id="block-b-rating"><div class="section-toggle" onclick="toggleSection('b-rating')"><div class="section-icon" style="background:var(--amber-bg);color:var(--amber);">⭐</div><div class="section-meta"><div class="section-name">推荐度 & 总评</div><div class="section-hint">几星？值得推荐给谁？</div></div><span class="section-wc" id="wc-b-rating">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-b-rating" placeholder="★★★★☆ 推荐给……" oninput="updateWc('b-rating')"></textarea></div></div>
+  </div>
+  <div class="stats-bar">
+    <button class="btn btn-accent" onclick="saveNote('book')" style="margin-left:auto;">保存笔记</button>
+    <div class="save-status" id="save-status-book"></div>
+  </div>
+</div>
+
+<!-- ⑤ 观影感受 -->
+<div class="view" id="view-film">
+  <div class="editor-header">
+    <div class="editor-title">观影感受</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">片名：<input id="film-title" style="border:none;background:transparent;font-size:12px;color:var(--text);outline:none;width:160px;" placeholder="输入片名……"/></div>
+  </div>
+  <div class="sections-wrapper">
+    <div class="section-block" id="block-f-feel"><div class="section-toggle" onclick="toggleSection('f-feel')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">🎬</div><div class="section-meta"><div class="section-name">第一感受</div><div class="section-hint">看完的第一个念头是什么？</div></div><span class="section-wc" id="wc-f-feel">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-f-feel" placeholder="看完之后，我的第一反应是……" oninput="updateWc('f-feel')"></textarea></div></div>
+    <div class="section-block" id="block-f-scene"><div class="section-toggle" onclick="toggleSection('f-scene')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">🎞</div><div class="section-meta"><div class="section-name">印象场景</div><div class="section-hint">最难忘的一个镜头或对话</div></div><span class="section-wc" id="wc-f-scene">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-f-scene" placeholder="有一幕让我……" oninput="updateWc('f-scene')"></textarea></div></div>
+    <div class="section-block" id="block-f-craft"><div class="section-toggle" onclick="toggleSection('f-craft')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">🛠</div><div class="section-meta"><div class="section-name">编剧视角</div><div class="section-hint">结构、人物、叙事手法值得借鉴的</div></div><span class="section-wc" id="wc-f-craft">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-f-craft" placeholder="从编剧的角度，这部作品……" oninput="updateWc('f-craft')"></textarea></div></div>
+    <div class="section-block" id="block-f-connect"><div class="section-toggle" onclick="toggleSection('f-connect')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">💡</div><div class="section-meta"><div class="section-name">创作连接</div><div class="section-hint">这部作品对我的项目有什么启发？</div></div><span class="section-wc" id="wc-f-connect">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-f-connect" placeholder="看完想到，在我的项目里可以……" oninput="updateWc('f-connect')"></textarea></div></div>
+    <div class="section-block" id="block-f-rating"><div class="section-toggle" onclick="toggleSection('f-rating')"><div class="section-icon" style="background:var(--accent-bg);color:var(--accent);">⭐</div><div class="section-meta"><div class="section-name">总评</div></div><span class="section-wc" id="wc-f-rating">0 字</span><span class="section-chevron">▾</span></div><div class="section-body"><textarea class="section-textarea compact" id="ta-f-rating" placeholder="★★★★☆ 总体来说……" oninput="updateWc('f-rating')"></textarea></div></div>
+  </div>
+  <div class="stats-bar">
+    <button class="btn btn-accent" onclick="saveNote('film')" style="margin-left:auto;">保存笔记</button>
+    <div class="save-status" id="save-status-film"></div>
+  </div>
+</div>
+
+<!-- ⑥ 日历 -->
+<div class="view" id="view-calendar">
+  <div class="cal-header">
+    <button class="btn-icon" onclick="calMove(-1)">‹</button>
+    <div class="cal-month" id="cal-month-title"></div>
+    <button class="btn-icon" onclick="calMove(1)">›</button>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-weekdays"><div class="cal-wd">日</div><div class="cal-wd">一</div><div class="cal-wd">二</div><div class="cal-wd">三</div><div class="cal-wd">四</div><div class="cal-wd">五</div><div class="cal-wd">六</div></div>
+    <div class="cal-days" id="cal-days"></div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">当月记录</div>
+    <div id="cal-list"></div>
+  </div>
+</div>
+
+<!-- ⑦ 历史记录 -->
+<div class="view" id="view-archive">
+  <div class="view-header"><div class="view-title">历史记录</div><div class="view-sub" id="archive-count">共 0 篇</div></div>
+  <div class="scrollable" id="archive-list"><div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:14px;">还没有历史记录</div></div>
+</div>
+
+<!-- ⑧ 习惯追踪 -->
+<div class="view" id="view-stats">
+  <div class="view-header"><div class="view-title">习惯追踪</div></div>
+  <div class="scrollable">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-label">总篇数</div><div class="stat-card-value" id="s-total">0</div><div class="stat-card-sub">篇</div></div>
+      <div class="stat-card"><div class="stat-card-label">连续天数</div><div class="stat-card-value" id="s-streak">0</div><div class="stat-card-sub">天</div></div>
+      <div class="stat-card"><div class="stat-card-label">本月完成</div><div class="stat-card-value" id="s-month">0</div><div class="stat-card-sub">天</div></div>
+      <div class="stat-card"><div class="stat-card-label">平均字数</div><div class="stat-card-value" id="s-avg">0</div><div class="stat-card-sub">字/篇</div></div>
+    </div>
+    <div class="heatmap-row"><div class="heatmap-title">本月书写记录</div><div class="heatmap-grid" id="heatmap-grid"></div></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px;">心情趋势（近14天）</div>
+      <div id="mood-chart" style="display:flex;align-items:flex-end;gap:3px;height:56px;"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">导出到 Claude 分析</div>
+    <div class="modal-sub">选择范围，复制后粘贴给 Claude 做深度审视。</div>
+    <div class="export-options">
+      <div class="export-opt" onclick="selectExport(this,'all')"><span class="export-opt-icon">📚</span><div class="export-opt-text"><h4>全部记录</h4><p id="export-all-label">分析整体创意倾向与长期模式</p></div></div>
+      <div class="export-opt" onclick="selectExport(this,'month')"><span class="export-opt-icon">📅</span><div class="export-opt-text"><h4>本月记录</h4><p id="export-month-label">月度习惯与情绪规律</p></div></div>
+      <div class="export-opt" onclick="selectExport(this,'7')"><span class="export-opt-icon">🗓</span><div class="export-opt-text"><h4>最近 7 天</h4><p>快速周度回顾</p></div></div>
+    </div>
+    <div class="export-preview" id="export-preview"></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" id="export-hint">选择范围后预览内容</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-accent" id="copy-btn" onclick="copyToClipboard()" disabled>复制到剪贴板</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const STORE_KEY='chenxie_v2';
+const TODAY=new Date();
+const todayStr=fmtDate(TODAY);
+let entries=[];
+let notes=[];
+let currentExportRange=null;
+let timerSec=0;
+let currentQIdx=0;
+let calYear=TODAY.getFullYear(),calMonth=TODAY.getMonth();
+
+const EXPLORE_QS=[
+  "小时候，家里教会我最重要的一件事是什么？",
+  "小时候，我认为什么是「好孩子」的？现在怎么看当时的定义？",
+  "父母/养育者最常说我的三句话是什么？",
+  "我的童年有哪些至今仍在影响我的习惯或恐惧？",
+  "如果给童年的自己写封信，我会说什么？",
+  "记忆中第一个真正意义上的「选择」是什么？",
+  "哪个瞬间让我一夜之间感觉自己「长大了」？经历是？感悟是？",
+  "我曾做过最勇敢的决定是什么？当时为什么敢这么做？",
+  "哪次失败/挫折，回头看反而是礼物？",
+  "迄今为止，让我最骄傲的时刻是哪个？",
+  "对我人生影响最大的人有哪些？为什么？",
+  "我从曾经的重要关系中学到了什么？关系分类梳理",
+  "哪次告别/失去，让我重新认识了自己？",
+  "我曾伤害过谁？当时的我是怎样的状态？现在怎么认为？",
+  "谁曾治愈过我？那份治愈是什么？",
+  "有什么事，我一直没对家人/朋友难说出口？",
+  "有没有一个道歉，我一直等待却从未等到？",
+  "哪件事我至今想起来仍会感到遗憾？",
+  "过去哪个决定，我至今仍在质疑？为什么？",
+  "如果乘坐时光机回到过去，我会改变什么？为什么？",
+  "每天醒来第一个念头通常是什么？为什么？持续多久了？",
+  "我最常在什么情况下对自己撒谎？",
+  "我拖延时，真正在逃避的是什么？",
+  "独处时，我最常做的三件事是什么？可以多或少",
+  "我放松是什么样？什么能真正让我放松下来？",
+  "什么能让我开心？最近一次真正开心的大笑是因为什么？",
+  "什么最容易触发我的愤怒？愤怒背后是什么？",
+  "我通常在什么情况下感到孤独？会经常感到孤独吗？",
+  "让我感到羞耻的事情通常与什么有关？",
+  "最近一次落泪是什么时候？为什么？",
+  "在亲密关系中，我最需要的是什么？",
+  "友谊中，我通常是给予者还是接受者？",
+  "工作中，我最看重的是什么（除了薪水）？",
+  "社交中，我常扮演什么角色？喜欢这样的角色吗？",
+  "谁是最了解现在的我的人？",
+  "我认为「成功」的人生是什么样的？",
+  "我不能容忍自己成为怎样的人？为什么？",
+  "我花钱最不心疼在什么事情上？",
+  "让我感到最有意义的小事是什么？",
+  "此刻，我最想培养自己的什么品质？想成为一个什么样的人？",
+  "一想到未来，我内心深处最害怕的是什么？",
+  "如果不考虑现实情况，我最想做什么？",
+  "我对「变老」最大的担忧是什么？",
+  "我最渴望被别人记住的是什么？为什么？",
+  "什么会让我觉得「这辈子值了」？",
+  "关于人生有副业，我想尝试什么？为了赚钱，还是梦想？",
+  "我一直想学但没学的技能是什么？为什么想学？",
+  "想去但还没去的地方是哪里？为什么？",
+  "想认识但还没认识的人是谁？为什么？",
+  "想改变但还没改变的坏习惯是什么？",
+  "理想的一天如何度过？（从醒来到入睡）",
+  "理想的居住环境是什么样子？",
+  "理想的亲密关系是怎样的状态？",
+  "理想的工作/事业是什么样？",
+  "理想的朋友圈是怎样的氛围，人际关系？",
+  "如果生命只剩一年，我会如何度过？",
+  "我希望在墓志铭上写什么？",
+  "我想留给世界/后代什么？",
+  "临终前，我最想对自己说什么？",
+  "回顾以上59个答案——现在的我，最需要开始做的一件事是什么？"
+];
+
+function fmtDate(d){return d.toISOString().split('T')[0];}
+function friendlyDate(s){const d=new Date(s+'T12:00:00');const days=['日','一','二','三','四','五','六'];return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · 周${days[d.getDay()]}`;}
+function shortDate(s){const d=new Date(s+'T12:00:00');return `${d.getMonth()+1}月${d.getDate()}日`;}
+
+function loadAll(){try{const r=localStorage.getItem(STORE_KEY);if(r){const d=JSON.parse(r);entries=d.entries||[];notes=d.notes||[];currentQIdx=d.qIdx||0;}}catch(e){entries=[];notes=[];}}
+function saveAll(){localStorage.setItem(STORE_KEY,JSON.stringify({entries,notes,qIdx:currentQIdx}));}
+function getTodayEntry(){return entries.find(e=>e.date===todayStr)||null;}
+function upsertToday(data){const i=entries.findIndex(e=>e.date===todayStr);if(i>=0)entries[i]={...entries[i],...data};else entries.unshift({date:todayStr,...data});saveAll();}
+
+// INIT
+document.addEventListener('DOMContentLoaded',()=>{
+  loadAll();
+  const days=['周日','周一','周二','周三','周四','周五','周六'];
+  document.getElementById('topbar-date').textContent=`${TODAY.getMonth()+1}月${TODAY.getDate()}日 · ${days[TODAY.getDay()]}`;
+  document.getElementById('editor-title-morning').textContent=friendlyDate(todayStr);
+  document.getElementById('editor-title-night').textContent='夜晚总结 · '+shortDate(todayStr);
+  loadTodayDraft();
+  renderExploreQ();
+  renderSidebar();
+  renderArchive();
+  renderStats();
+  renderCal();
+  setInterval(()=>{timerSec++;const mm=String(Math.floor(timerSec/60)).padStart(2,'0');const ss=String(timerSec%60).padStart(2,'0');const t=mm+':'+ss;document.getElementById('timer-display').textContent=t;document.getElementById('stat-time').textContent=t;},1000);
+});
+
+function loadTodayDraft(){
+  const e=getTodayEntry();
+  if(!e)return;
+  const fields=['material','step1','step2','step3','observe','question','creative','explore','n-key','n-book','n-life','n-idea','n-learn','n-reflect','n-sleep','gratitude'];
+  fields.forEach(f=>{const el=document.getElementById('ta-'+f);if(el&&e[f])el.value=e[f];});
+  if(e.mood){document.getElementById('mood-morning').value=e.mood;document.getElementById('mval-morning').textContent=e.mood;}
+  if(e.moodNight){document.getElementById('mood-night').value=e.moodNight;document.getElementById('mval-night').textContent=e.moodNight;}
+  if(e.exploreQIdx!==undefined)currentQIdx=e.exploreQIdx;
+  updateAllWc();
+}
+
+// EXPLORE Q
+function renderExploreQ(){
+  document.getElementById('explore-q-text').textContent=EXPLORE_QS[currentQIdx];
+  document.getElementById('explore-qnum').textContent=`问题 ${currentQIdx+1} / ${EXPLORE_QS.length}`;}
+function nextQ(){currentQIdx=(currentQIdx+1)%EXPLORE_QS.length;renderExploreQ();autoSave();}
+function prevQ(){currentQIdx=(currentQIdx-1+EXPLORE_QS.length)%EXPLORE_QS.length;renderExploreQ();autoSave();}
+
+// WC
+function countCh(s){return s.trim().length;}
+function getFields(prefix){
+  if(prefix==='sandtray')return['material','step1','step2','step3'];
+  return[prefix];
+}
+function updateWc(sec){
+  const fields=getFields(sec);
+  const total=fields.reduce((s,f)=>{const el=document.getElementById('ta-'+f);return s+(el?countCh(el.value):0);},0);
+  const el=document.getElementById('wc-'+sec);if(el)el.textContent=total+' 字';
+  updateTotalWc();autoSave();
+}
+function updateTotalWc(){
+  const morning=['material','step1','step2','step3','observe','question','creative','explore'];
+  const total=morning.reduce((s,f)=>{const el=document.getElementById('ta-'+f);return s+(el?countCh(el.value):0);},0);
+  document.getElementById('stat-wc').textContent=total;
+}
+function updateAllWc(){
+  ['sandtray','observe','question','creative','explore','n-key','n-book','n-life','n-idea','n-learn','n-reflect','n-sleep','gratitude','b-summary','b-quote','b-connect','b-rating','f-feel','f-scene','f-craft','f-connect','f-rating'].forEach(s=>updateWc(s));
+}
+
+// AUTOSAVE
+let autoTimer=null;
+function autoSave(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>doSave(true),2000);}
+function saveEntry(){doSave(false);}
+function doSave(silent){
+  const data={
+    mood:parseInt(document.getElementById('mood-morning').value),
+    moodNight:parseInt(document.getElementById('mood-night').value),
+    exploreQIdx:currentQIdx,
+    totalChars:0,
+    savedAt:new Date().toISOString(),
+    timerSec
+  };
+  ['material','step1','step2','step3','observe','question','creative','explore','n-key','n-book','n-life','n-idea','n-learn','n-reflect','n-sleep','gratitude'].forEach(f=>{
+    const el=document.getElementById('ta-'+f);if(el)data[f]=el.value;
+  });
+  data.totalChars=['material','step1','step2','step3','observe','question','creative','explore'].reduce((s,f)=>s+countCh(data[f]||''),0);
+  upsertToday(data);
+  renderSidebar();renderArchive();renderStats();
+  const st=document.getElementById('save-status');
+  st.textContent=silent?'· 自动保存中':'✓ 已保存';
+  setTimeout(()=>st.textContent='',silent?1500:2500);
+}
+
+function saveNote(type){
+  const titleEl=document.getElementById(type+'-title');
+  const title=titleEl?titleEl.value:'';
+  const fields=type==='book'?['b-summary','b-quote','b-connect','b-rating']:['f-feel','f-scene','f-craft','f-connect','f-rating'];
+  const note={type,title,date:todayStr,savedAt:new Date().toISOString()};
+  fields.forEach(f=>{const el=document.getElementById('ta-'+f);if(el)note[f]=el.value;});
+  notes.unshift(note);saveAll();renderArchive();
+  const st=document.getElementById('save-status-'+type);
+  st.textContent='✓ 笔记已保存';setTimeout(()=>st.textContent='',2500);
+}
+
+// SIDEBAR
+function renderSidebar(){
+  const streak=calcStreak();
+  document.getElementById('streak-num').textContent=streak;
+  document.getElementById('stat-streak').textContent=streak;
+  document.getElementById('total-label').textContent=`共 ${entries.length} 篇`;
+  const list=document.getElementById('entry-list');
+  const recent=entries.slice(0,8);
+  if(!recent.length){list.innerHTML='<div style="font-size:12px;color:var(--text-muted);padding:8px;">还没有记录</div>';return;}
+  list.innerHTML=recent.map(e=>{
+    const preview=(e.material||e.step1||'').trim().slice(0,28)||'（空）';
+    const isT=e.date===todayStr;
+    return`<div class="entry-item ${isT?'active':''}" onclick="jumpEntry('${e.date}')">
+      <div class="entry-item-date">${isT?'今天':shortDate(e.date)}</div>
+      <div class="entry-item-preview">${preview}</div>
+    </div>`;
+  }).join('');
+}
+function jumpEntry(date){if(date===todayStr)switchView('morning');else switchView('archive');closeSidebar();}
+
+// ARCHIVE
+function renderArchive(){
+  const all=[...entries.map(e=>({...e,_type:'morning'})),...notes.map(n=>({...n,_type:n.type}))].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('archive-count').textContent=`共 ${all.length} 条`;
+  const list=document.getElementById('archive-list');
+  if(!all.length){list.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:14px;">还没有记录</div>';return;}
+  const grouped={};
+  all.forEach(e=>{const d=new Date(e.date+'T12:00:00');const k=`${d.getFullYear()}年${d.getMonth()+1}月`;if(!grouped[k])grouped[k]=[];grouped[k].push(e);});
+  list.innerHTML=Object.entries(grouped).map(([m,items])=>
+    `<div class="archive-month"><div class="archive-month-title">${m}</div>${items.map(e=>{
+      let typeTag='',preview='',title='';
+      if(e._type==='morning'){preview=(e.material||e.step1||'').trim()||'（空）';}
+      else if(e._type==='book'){typeTag='<span class="tag type-book">📖 读书</span>';title=e.title?`《${e.title}》 · `:'';preview=(e['b-summary']||'').trim()||'';}
+      else if(e._type==='film'){typeTag='<span class="tag type-film">🎬 观影</span>';title=e.title?`《${e.title}》 · `:'';preview=(e['f-feel']||'').trim()||'';}
+      return`<div class="archive-card"><div class="archive-card-date">${title}${friendlyDate(e.date)}</div><div class="archive-card-preview">${preview}</div><div class="archive-card-meta">${typeTag}${e.mood?`<span class="tag">😌 ${e.mood}/10</span>`:''}<span class="tag">📝 ${e.totalChars||0} 字</span></div></div>`;
+    }).join('')}</div>`
+  ).join('');
+}
+
+// STATS
+function renderStats(){
+  const streak=calcStreak();
+  const now=new Date();
+  const mEntries=entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();});
+  const avg=entries.length?Math.round(entries.reduce((s,e)=>s+(e.totalChars||0),0)/entries.length):0;
+  document.getElementById('s-total').textContent=entries.length;
+  document.getElementById('s-streak').textContent=streak;
+  document.getElementById('s-month').textContent=mEntries.length;
+  document.getElementById('s-avg').textContent=avg;
+  const dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const done=new Set(mEntries.map(e=>e.date));
+  document.getElementById('heatmap-grid').innerHTML=Array.from({length:dim},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth(),i+1);const ds=fmtDate(d);return`<div class="hm-cell ${ds===todayStr?'today':done.has(ds)?'done':''}" title="${i+1}日"></div>`;}).join('');
+  const recent=entries.slice(0,14).reverse();
+  document.getElementById('mood-chart').innerHTML=recent.map(e=>`<div style="flex:1;background:${e.date===todayStr?'var(--accent)':'var(--accent-bg)'};border-radius:3px 3px 0 0;height:${Math.round(((e.mood||7)/10)*100)}%;min-height:4px;" title="${shortDate(e.date)}: ${e.mood||'—'}/10"></div>`).join('');
+}
+
+// CALENDAR
+function renderCal(){
+  const y=calYear,m=calMonth;
+  const months=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  document.getElementById('cal-month-title').textContent=`${y}年 ${months[m]}`;
+  const first=new Date(y,m,1).getDay();
+  const dim=new Date(y,m+1,0).getDate();
+  const done=new Set(entries.map(e=>e.date));
+  let html='';
+  for(let i=0;i<first;i++)html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=dim;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isT=ds===todayStr;const hasE=done.has(ds);html+=`<div class="cal-day${isT?' today':''}${hasE?' has-entry':''}" onclick="calDayClick('${ds}')">${d}</div>`;}
+  document.getElementById('cal-days').innerHTML=html;
+  const calEntries=entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m;});
+  document.getElementById('cal-list').innerHTML=calEntries.length?calEntries.map(e=>`<div class="archive-card" onclick="jumpEntry('${e.date}')"><div class="archive-card-date">${shortDate(e.date)}</div><div class="archive-card-preview">${(e.material||e.step1||'').trim().slice(0,60)||'（空）'}</div></div>`).join(''):'<div style="font-size:13px;color:var(--text-muted);padding:6px 0;">本月还没有记录</div>';
+}
+function calMove(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;}renderCal();}
+function calDayClick(ds){const e=entries.find(en=>en.date===ds);if(e){if(ds===todayStr)switchView('morning');else switchView('archive');}}
+
+// STREAK
+function calcStreak(){
+  if(!entries.length)return 0;
+  const dates=new Set(entries.map(e=>e.date));
+  let streak=0,check=new Date(TODAY);
+  while(true){const ds=fmtDate(check);if(dates.has(ds)){streak++;check.setDate(check.getDate()-1);}else break;}
+  return streak;
+}
+
+// TOGGLE SECTION
+function toggleSection(id){document.getElementById('block-'+id).classList.toggle('collapsed');}
+
+// NAV
+function switchView(name){
+  ['morning','night','book','film','calendar','archive','stats'].forEach(v=>{
+    document.getElementById('view-'+v).classList.toggle('active',v===name);
+    document.getElementById('nav-'+v).classList.toggle('active',v===name);
+  });
+  closeSidebar();
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');}
+
+// EXPORT
+function openExport(){
+  currentExportRange=null;
+  document.querySelectorAll('.export-opt').forEach(o=>o.classList.remove('selected'));
+  document.getElementById('export-preview').style.display='none';
+  document.getElementById('copy-btn').disabled=true;
+  document.getElementById('export-hint').textContent='选择范围后预览内容';
+  const now=new Date();
+  const mc=entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();}).length;
+  document.getElementById('export-all-label').textContent=`共 ${entries.length} 篇，分析整体创意倾向与长期模式`;
+  document.getElementById('export-month-label').textContent=`共 ${mc} 篇，月度习惯与情绪规律`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function getExportEntries(r){const now=new Date();if(r==='all')return entries;if(r==='month')return entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();});const cut=new Date(now);cut.setDate(cut.getDate()-7);return entries.filter(e=>new Date(e.date+'T12:00:00')>=cut);}
+function buildExportText(r){
+  const sub=getExportEntries(r);
+  if(!sub.length)return'（该范围内没有记录）';
+  const intro=`以下是我的晨间书写记录（共 ${sub.length} 篇），请从以下维度做深度分析：
+1. 创意倾向：最常从哪类经验提取灵感？有没有反复出现的主题或意象？
+2. 情绪与产出：哪类状态下内容质量更高？
+3. 逻辑习惯：倾向线性推理还是跳跃性联想？
+4. 思维模式：从思维沙盘的归纳中，发现哪些反复出现的心法或盲区？
+5. 自我认知：在回避哪些话题？什么时候最诚实？
+6. 改善建议：给出3个具体可操作的改善方向。
+
+---
+
+`;
+  const body=[...sub].reverse().map(e=>{
+    const parts=[`【${friendlyDate(e.date)}】状态：${e.mood||'—'}/10`];
+    if(e.material)parts.push(`▸ 素材\n${e.material.trim()}`);
+    if(e.step1)parts.push(`▸ 还原\n${e.step1.trim()}`);
+    if(e.step2)parts.push(`▸ 解剖\n${e.step2.trim()}`);
+    if(e.step3)parts.push(`▸ 归纳/心法\n${e.step3.trim()}`);
+    if(e.explore)parts.push(`▸ 自我探索（Q${(e.exploreQIdx||0)+1}）\n${e.explore.trim()}`);
+    if(e.observe)parts.push(`▸ 观察与细节\n${e.observe.trim()}`);
+    if(e.question)parts.push(`▸ 悬置问题\n${e.question.trim()}`);
+    if(e.creative)parts.push(`▸ 创作连接\n${e.creative.trim()}`);
+    return parts.join('\n\n');
+  }).join('\n\n'+'─'.repeat(38)+'\n\n');
+  return intro+body;
+}
+function selectExport(el,r){
+  document.querySelectorAll('.export-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');currentExportRange=r;
+  const text=buildExportText(r);
+  const prev=document.getElementById('export-preview');
+  prev.textContent=text.slice(0,500)+(text.length>500?'\n\n……（预览截断）':'');prev.style.display='block';
+  document.getElementById('export-hint').textContent=`共 ${getExportEntries(r).length} 篇，约 ${text.length} 字符`;
+  document.getElementById('copy-btn').disabled=false;
+}
+async function copyToClipboard(){
+  if(!currentExportRange)return;
+  const text=buildExportText(currentExportRange);
+  try{await navigator.clipboard.writeText(text);}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+  const btn=document.getElementById('copy-btn');btn.textContent='✓ 已复制！';btn.style.background='var(--success)';
+  setTimeout(()=>{btn.textContent='复制到剪贴板';btn.style.background='';closeModal();},2000);
+}
+
+// ── GOOGLE DRIVE SYNC ─────────────────────────────────────────
+const CLIENT_ID = '1002704689708-q97vtpjgid68qmqv61th8jc228oh50ia.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const FILE_NAME = 'chenxie_data.json';
+
+let gapiReady = false;
+let gisReady = false;
+let tokenClient = null;
+let driveFileId = null;
+let isSyncing = false;
+
+function initDrive() {
+  // Load gapi
+  if (typeof gapi !== 'undefined') {
+    gapi.load('client', async () => {
+      await gapi.client.init({});
+      await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+      gapiReady = true;
+      tryAutoSignIn();
+    });
+  } else {
+    setTimeout(initDrive, 500);
+  }
+}
+
+function initGIS() {
+  if (typeof google !== 'undefined' && google.accounts) {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) { setDriveStatus('error'); return; }
+        localStorage.setItem('drive_token', resp.access_token);
+        localStorage.setItem('drive_token_time', Date.now());
+        gisReady = true;
+        setDriveStatus('syncing');
+        await syncFromDrive();
+      }
+    });
+    gisReady = true;
+    tryAutoSignIn();
+  } else {
+    setTimeout(initGIS, 500);
+  }
+}
+
+function tryAutoSignIn() {
+  if (!gapiReady || !gisReady) return;
+  const token = localStorage.getItem('drive_token');
+  const tokenTime = parseInt(localStorage.getItem('drive_token_time') || '0');
+  const elapsed = Date.now() - tokenTime;
+  if (token && elapsed < 3500000) {
+    gapi.client.setToken({ access_token: token });
+    setDriveStatus('syncing');
+    syncFromDrive();
+  } else {
+    setDriveStatus('disconnected');
+  }
+}
+
+function driveAction() {
+  const status = document.getElementById('drive-status').dataset.status;
+  if (status === 'connected') {
+    syncToDrive();
+  } else {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+}
+
+function setDriveStatus(s) {
+  const el = document.getElementById('drive-status');
+  if (!el) return;
+  el.dataset.status = s;
+  if (s === 'connected') { el.textContent = '☁️ 已同步'; el.style.color = 'var(--success)'; }
+  else if (s === 'syncing') { el.textContent = '☁️ 同步中…'; el.style.color = 'var(--text-muted)'; }
+  else if (s === 'error') { el.textContent = '☁️ 同步失败'; el.style.color = '#e85a7a'; }
+  else { el.textContent = '☁️ 连接 Drive'; el.style.color = ''; }
+}
+
+async function findDriveFile() {
+  const res = await gapi.client.drive.files.list({
+    spaces: 'appDataFolder',
+    fields: 'files(id, name)',
+    q: `name='${FILE_NAME}'`
+  });
+  const files = res.result.files;
+  return files && files.length > 0 ? files[0].id : null;
+}
+
+async function syncFromDrive() {
+  if (isSyncing) return;
+  isSyncing = true;
+  try {
+    driveFileId = await findDriveFile();
+    if (driveFileId) {
+      const res = await gapi.client.drive.files.get({
+        fileId: driveFileId,
+        alt: 'media'
+      });
+      const driveData = typeof res.result === 'string' ? JSON.parse(res.result) : res.result;
+      const localRaw = localStorage.getItem(STORE_KEY);
+      const localData = localRaw ? JSON.parse(localRaw) : { entries: [], notes: [], qIdx: 0 };
+      const merged = mergeData(localData, driveData);
+      localStorage.setItem(STORE_KEY, JSON.stringify(merged));
+      entries = merged.entries || [];
+      notes = merged.notes || [];
+      currentQIdx = merged.qIdx || 0;
+      loadTodayDraft();
+      renderSidebar();
+      renderArchive();
+      renderStats();
+      renderCal();
+    }
+    await syncToDrive();
+  } catch(e) {
+    console.error('Drive sync error:', e);
+    setDriveStatus('error');
+  } finally {
+    isSyncing = false;
+  }
+}
+
+function mergeData(local, remote) {
+  const allEntries = [...(local.entries || []), ...(remote.entries || [])];
+  const entryMap = {};
+  allEntries.forEach(e => {
+    if (!entryMap[e.date] || new Date(e.savedAt) > new Date(entryMap[e.date].savedAt || 0)) {
+      entryMap[e.date] = e;
+    }
+  });
+  const allNotes = [...(local.notes || []), ...(remote.notes || [])];
+  const noteMap = {};
+  allNotes.forEach(n => {
+    const key = n.savedAt || (n.date + n.type + (n.title || ''));
+    noteMap[key] = n;
+  });
+  return {
+    entries: Object.values(entryMap).sort((a,b) => b.date.localeCompare(a.date)),
+    notes: Object.values(noteMap).sort((a,b) => (b.savedAt||'').localeCompare(a.savedAt||'')),
+    qIdx: Math.max(local.qIdx || 0, remote.qIdx || 0)
+  };
+}
+
+async function syncToDrive() {
+  if (!gapiReady) return;
+  const token = localStorage.getItem('drive_token');
+  if (!token) return;
+  setDriveStatus('syncing');
+  try {
+    const data = JSON.stringify({ entries, notes, qIdx: currentQIdx });
+    const boundary = '-------314159265358979323846';
+    const body = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({ name: FILE_NAME, parents: ['appDataFolder'] })}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${boundary}--`;
+    if (driveFileId) {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: data
+      });
+    } else {
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': `multipart/related; boundary="${boundary}"` },
+        body: body
+      });
+      const json = await res.json();
+      driveFileId = json.id;
+    }
+    setDriveStatus('connected');
+  } catch(e) {
+    console.error('Drive upload error:', e);
+    setDriveStatus('error');
+  }
+}
+
+// Hook into existing saveAll
+const _origSaveAll = saveAll;
+window.saveAll = function() {
+  _origSaveAll();
+  syncToDrive();
+};
+
+// Init on load
+window.addEventListener('load', () => {
+  setTimeout(initDrive, 800);
+  setTimeout(initGIS, 800);
+});
+
+</script>
+</body>
+</html>
