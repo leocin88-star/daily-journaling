@@ -192,6 +192,19 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:10
   .section-body{padding-left:14px;padding-right:14px;}
   .scrollable,.cal-grid{padding:12px 14px;}
 }
+
+/* DETAIL MODAL */
+.detail-modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.detail-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.detail-title{font-size:15px;font-weight:600;font-family:var(--font-body);color:var(--text);line-height:1.4;}
+.detail-close{width:28px;height:28px;border-radius:6px;border:none;background:var(--surface-2);color:var(--text-muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.detail-close:hover{background:var(--border);color:var(--text);}
+.detail-body{overflow-y:auto;padding:16px 20px 20px;flex:1;}
+.detail-section{margin-bottom:18px;}
+.detail-section-label{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.detail-section-content{font-size:14px;color:var(--text);line-height:1.85;font-family:var(--font-body);white-space:pre-wrap;word-break:break-word;}
+.detail-meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.detail-empty{font-size:13px;color:var(--text-muted);font-style:italic;}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
@@ -460,6 +473,17 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:10
 </div><!-- /main -->
 </div><!-- /layout -->
 
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-modal">
+    <div class="detail-header">
+      <div class="detail-title" id="detail-title"></div>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
+
 <!-- EXPORT MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
@@ -482,8 +506,32 @@ body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:10
 <script>
 // ── DATA ──────────────────────────────────────────────────────
 const STORE_KEY='chenxie_v2';
-const TODAY=new Date();
-const todayStr=fmtDate(TODAY);
+let TODAY=new Date();
+let todayStr=fmtDate(TODAY);
+
+function checkDateRefresh(){
+  const newDay=fmtDate(new Date());
+  if(newDay!==todayStr){
+    TODAY=new Date();
+    todayStr=newDay;
+    // Clear today's textarea fields for new day
+    ['material','step1','step2','step3','observe','question','creative','explore',
+     'n-key','n-book','n-life','n-idea','n-learn','n-reflect','n-sleep','gratitude'].forEach(f=>{
+      const el=document.getElementById('ta-'+f);if(el)el.value='';
+    });
+    document.getElementById('mood-morning').value=7;
+    document.getElementById('mval-morning').textContent='7';
+    document.getElementById('mood-night').value=7;
+    document.getElementById('mval-night').textContent='7';
+    document.getElementById('editor-title-morning').textContent=friendlyDate(todayStr);
+    document.getElementById('editor-title-night').textContent='夜晚总结 · '+shortDate(todayStr);
+    timerSec=0;
+    loadTodayDraft();
+    renderSidebar();renderArchive();renderStats();renderCal();
+    updateAllWc();
+  }
+}
+setInterval(checkDateRefresh, 60000);
 let entries=[];
 let notes=[];
 let currentExportRange=null;
@@ -642,6 +690,21 @@ function doSave(silent){
   setTimeout(()=>st.textContent='',silent?1500:2500);
 }
 
+
+function saveNight(){
+  const data={
+    moodNight:parseInt(document.getElementById('mood-night').value),
+    savedAt:new Date().toISOString(),
+  };
+  ['n-key','n-book','n-life','n-idea','n-learn','n-reflect','n-sleep','gratitude'].forEach(f=>{
+    const el=document.getElementById('ta-'+f);if(el)data[f]=el.value;
+  });
+  upsertToday(data);
+  renderSidebar();renderArchive();renderStats();renderCal();
+  const st=document.getElementById('save-status-night');
+  st.textContent='✓ 已保存';setTimeout(()=>st.textContent='',2500);
+  syncToDrive();
+}
 function saveNote(type){
   const titleEl=document.getElementById(type+'-title');
   const title=titleEl?titleEl.value:'';
@@ -687,7 +750,8 @@ function renderArchive(){
       if(e._type==='morning'){preview=(e.material||e.step1||'').trim()||'（空）';}
       else if(e._type==='book'){typeTag='<span class="tag type-book">📖 读书</span>';title=e.title?`《${e.title}》 · `:'';preview=(e['b-summary']||'').trim()||'';}
       else if(e._type==='film'){typeTag='<span class="tag type-film">🎬 观影</span>';title=e.title?`《${e.title}》 · `:'';preview=(e['f-feel']||'').trim()||'';}
-      return`<div class="archive-card"><div class="archive-card-date">${title}${friendlyDate(e.date)}</div><div class="archive-card-preview">${preview}</div><div class="archive-card-meta">${typeTag}${e.mood?`<span class="tag">😌 ${e.mood}/10</span>`:''}<span class="tag">📝 ${e.totalChars||0} 字</span></div></div>`;
+      const _savedAt=e.savedAt?e.savedAt.replace(/'/g,""):'';
+      return`<div class="archive-card" onclick="openDetail('${e._type}','${e.date}','${_savedAt}')"><div class="archive-card-date">${title}${friendlyDate(e.date)}</div><div class="archive-card-preview">${preview}</div><div class="archive-card-meta">${typeTag}${e.mood?`<span class="tag">😌 ${e.mood}/10</span>`:''}<span class="tag">📝 ${e.totalChars||0} 字</span></div></div>`;
     }).join('')}</div>`
   ).join('');
 }
@@ -716,13 +780,20 @@ function renderCal(){
   document.getElementById('cal-month-title').textContent=`${y}年 ${months[m]}`;
   const first=new Date(y,m,1).getDay();
   const dim=new Date(y,m+1,0).getDate();
-  const done=new Set(entries.map(e=>e.date));
+  const noteDates=new Set(notes.map(n=>n.date));
+  const done=new Set([...entries.map(e=>e.date),...notes.map(n=>n.date)]);
   let html='';
   for(let i=0;i<first;i++)html+=`<div class="cal-day empty"></div>`;
   for(let d=1;d<=dim;d++){const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isT=ds===todayStr;const hasE=done.has(ds);html+=`<div class="cal-day${isT?' today':''}${hasE?' has-entry':''}" onclick="calDayClick('${ds}')">${d}</div>`;}
   document.getElementById('cal-days').innerHTML=html;
   const calEntries=entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m;});
-  document.getElementById('cal-list').innerHTML=calEntries.length?calEntries.map(e=>`<div class="archive-card" onclick="jumpEntry('${e.date}')"><div class="archive-card-date">${shortDate(e.date)}</div><div class="archive-card-preview">${(e.material||e.step1||'').trim().slice(0,60)||'（空）'}</div></div>`).join(''):'<div style="font-size:13px;color:var(--text-muted);padding:6px 0;">本月还没有记录</div>';
+  const calNotes=notes.filter(n=>{const d=new Date(n.date+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m;});
+  const allCal=[...calEntries.map(e=>({...e,_kind:'morning'})),...calNotes.map(n=>({...n,_kind:n.type}))].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('cal-list').innerHTML=allCal.length?allCal.map(e=>{
+    const icon=e._kind==='book'?'📖 ':e._kind==='film'?'🎬 ':'✍️ ';
+    const preview=e._kind==='morning'?(e.material||e.step1||'').trim().slice(0,50)||'（空）':(e.title?`《${e.title}》`:'')||'';
+    return`<div class="archive-card" onclick="jumpEntry('${e.date}')"><div class="archive-card-date">${icon}${shortDate(e.date)}</div><div class="archive-card-preview">${preview}</div></div>`;
+  }).join(''):'<div style="font-size:13px;color:var(--text-muted);padding:6px 0;">本月还没有记录</div>';
 }
 function calMove(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;}renderCal();}
 function calDayClick(ds){const e=entries.find(en=>en.date===ds);if(e){if(ds===todayStr)switchView('morning');else switchView('archive');}}
@@ -762,6 +833,83 @@ function openExport(){
   document.getElementById('export-all-label').textContent=`共 ${entries.length} 篇，分析整体创意倾向与长期模式`;
   document.getElementById('export-month-label').textContent=`共 ${mc} 篇，月度习惯与情绪规律`;
   document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeDetail(){
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+function openDetail(type, date, savedAt){
+  let item;
+  if(type==='morning'){
+    item=entries.find(e=>e.date===date);
+  } else {
+    item=notes.find(n=>n.date===date&&n.type===type&&(n.savedAt===savedAt||!savedAt));
+  }
+  if(!item)return;
+
+  const overlay=document.getElementById('detail-overlay');
+  const titleEl=document.getElementById('detail-title');
+  const bodyEl=document.getElementById('detail-body');
+
+  let titleText='';
+  if(type==='morning') titleText='✍️ '+friendlyDate(date);
+  else if(type==='book') titleText='📖 '+(item.title?`《${item.title}》 · `:'')+friendlyDate(date);
+  else if(type==='film') titleText='🎬 '+(item.title?`《${item.title}》 · `:'')+friendlyDate(date);
+  titleEl.textContent=titleText;
+
+  let html='';
+
+  // Meta row
+  html+='<div class="detail-meta-row">';
+  if(item.mood) html+=`<span class="tag">😌 状态 ${item.mood}/10</span>`;
+  if(item.moodNight) html+=`<span class="tag">🌙 夜间评分 ${item.moodNight}/10</span>`;
+  if(item.totalChars) html+=`<span class="tag">📝 ${item.totalChars} 字</span>`;
+  if(item.timerSec && item.timerSec>0){const mm=Math.floor(item.timerSec/60);html+=`<span class="tag">⏱ ${mm} 分钟</span>`;}
+  html+='</div>';
+
+  function section(icon, label, content){
+    if(!content||!content.trim())return'';
+    return`<div class="detail-section"><div class="detail-section-label">${icon} ${label}</div><div class="detail-section-content">${content.trim()}</div></div>`;
+  }
+
+  if(type==='morning'){
+    html+=section('素材','素材',item.material);
+    html+=section('1️⃣','还原',item.step1);
+    html+=section('2️⃣','解剖',item.step2);
+    html+=section('3️⃣','归纳 / 心法',item.step3);
+    if(item.exploreQIdx!==undefined) html+=section('🔍',`自我探索（Q${item.exploreQIdx+1}）`,item.explore);
+    html+=section('👁','观察与细节',item.observe);
+    html+=section('❓','悬置问题',item.question);
+    html+=section('💡','创作连接',item.creative);
+    html+='<hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">';
+    html+=section('⭐','今日要事',item['n-key']);
+    html+=section('📖','今日书帐',item['n-book']);
+    html+=section('🍱','生活记录',item['n-life']);
+    html+=section('⚡','今日灵感',item['n-idea']);
+    html+=section('🧠','今日新知',item['n-learn']);
+    html+=section('🪞','今日反思',item['n-reflect']);
+    html+=section('🌙','睡眠评分',item['n-sleep']);
+    html+=section('🌸','每日感谢',item.gratitude);
+  } else if(type==='book'){
+    html+=section('📝','核心摘要',item['b-summary']);
+    html+=section('💬','金句摘录',item['b-quote']);
+    html+=section('🔗','与我的连接',item['b-connect']);
+    html+=section('⭐','推荐度 & 总评',item['b-rating']);
+  } else if(type==='film'){
+    html+=section('🎬','第一感受',item['f-feel']);
+    html+=section('🎞','印象场景',item['f-scene']);
+    html+=section('🛠','编剧视角',item['f-craft']);
+    html+=section('💡','创作连接',item['f-connect']);
+    html+=section('⭐','总评',item['f-rating']);
+  }
+
+  if(!html.replace(/<[^>]*>/g,'').trim()){
+    bodyEl.innerHTML='<div class="detail-empty">这篇记录还没有内容。</div>';
+  } else {
+    bodyEl.innerHTML=html;
+  }
+  overlay.classList.add('open');
 }
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 function getExportEntries(r){const now=new Date();if(r==='all')return entries;if(r==='month')return entries.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();});const cut=new Date(now);cut.setDate(cut.getDate()-7);return entries.filter(e=>new Date(e.date+'T12:00:00')>=cut);}
